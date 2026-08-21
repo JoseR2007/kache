@@ -20,13 +20,34 @@ int is_valid_req(const char *req)
   if (type == unknown_type)
     return 0;
 
+  char *delimitation = strchr(normalize_req(req), DIVISION_MASK);
+  if (!delimitation || strlen(*(delimitation + 1)) == 0)
+    return 0;
+
   if (type == get_type || type == del_type)
   {
+    char *buf = strchr(delimitation, ":");
+    char buf_len[strcspn(buf, ":") + 1];
+    strncpy(buf_len, buf + 1, strcspn(buf, ":"));
+    buf_len[strcspn(buf, ":")] = '\0';
+
+    int len_key = atoi(buf_len);
+    if (len_key == 0)
+      return 0;
+    int ind = strcspn(buf, ":") + 2, count = 0;
+    while (buf[ind] != '\"' && buf[ind] != '\0')
+    {
+      ind++;
+      count++;
+    }
+    if (count != len_key)
+      return 0;
   }
   else if (type == set_type)
   {
   }
 
+  free(delimitation);
   return 1;
 }
 
