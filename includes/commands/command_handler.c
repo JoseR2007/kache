@@ -63,19 +63,27 @@ kvstore *get_data(const char *req)
 char *normalize_req(const char *req)
 {
   char *result = NULL;
-  int ind = 0, sup = 0;
+  int ind = 0, sup = 0, j = 0;
+
+  result = (char *)malloc((strlen(req) + 1) * sizeof(char));
+  if (!result)
+    return NULL;
+
   while (req[ind] != '\0')
   {
     if (req[ind] == '\"')
+    {
       sup = !sup;
+      result[j] = req[ind];
+      j++;
+    }
     else if (req[ind] != ' ' || sup)
     {
-      result = (char *)calloc(result, (ind + 1) * sizeof(char));
-      result[ind] = req[ind];
+      result[j] = req[ind];
+      j++;
     }
     ind++;
   }
-  result = (char *)calloc(result, (ind + 1) * sizeof(char));
-  result[ind] = '\0';
+  result[j] = '\0';
   return result;
 }
