@@ -2,13 +2,19 @@
 
 type_request get_type_req(const char *req)
 {
-  if (strncmp(req, GET_KEY, LEN_TYPE))
+  if (strncmp(req, GET_KEY, LEN_TYPE) == 0)
     return get_type;
-  else if (strncmp(req, SET_KEY, LEN_TYPE))
+  else if (strncmp(req, SET_KEY, LEN_TYPE) == 0)
     return set_type;
-  else if (strncmp(req, DEL_KEY, LEN_TYPE))
+  else if (strncmp(req, DEL_KEY, LEN_TYPE) == 0)
     return del_type;
+  else if (strncmp(req, SAV_KEY, LEN_TYPE) == 0)
+    return sav_type;
   return unknown_type;
+}
+
+int is_valid_feild(const char *feild)
+{
 }
 
 int is_valid_req(const char *req)
@@ -20,34 +26,25 @@ int is_valid_req(const char *req)
   if (type == unknown_type)
     return 0;
 
-  char *delimitation = strchr(normalize_req(req), DIVISION_MASK);
-  if (!delimitation || strlen(*(delimitation + 1)) == 0)
+  char *normalized = normalize_req(req);
+  if (!normalized)
     return 0;
 
-  if (type == get_type || type == del_type)
-  {
-    char *buf = strchr(delimitation, ":");
-    char buf_len[strcspn(buf, ":") + 1];
-    strncpy(buf_len, buf + 1, strcspn(buf, ":"));
-    buf_len[strcspn(buf, ":")] = '\0';
+  if (!strstr(normalized, CLOSE_MASK) || !strstr(normalized, DIVISION_MASK) || !strchr(normalized, ':'))
+    return 0;
 
-    int len_key = atoi(buf_len);
-    if (len_key == 0)
-      return 0;
-    int ind = strcspn(buf, ":") + 2, count = 0;
-    while (buf[ind] != '\"' && buf[ind] != '\0')
-    {
-      ind++;
-      count++;
-    }
-    if (count != len_key)
-      return 0;
+  char *division_buf = strstr(normalized, DIVISION_MASK);
+  if (!division_buf)
+    return 0;
+
+  if (type == GET_KEY || type == DEL_KEY)
+  {
   }
-  else if (type == set_type)
+  else if (type == SAV_KEY || type == SET_KEY)
   {
   }
 
-  free(delimitation);
+  free(normalized);
   return 1;
 }
 
