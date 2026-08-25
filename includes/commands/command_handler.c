@@ -15,6 +15,28 @@ type_request get_type_req(const char *req)
 
 int is_valid_feild(const char *feild)
 {
+  if (!feild || strlen(feild + 1) == 0)
+    return 0;
+
+  char *buf = strchr(feild, ':');
+
+  int len_char = strcspn(feild, ":");
+  char buf_leng[len_char + 1];
+  strncpy(buf_leng, buf + 1, len_char);
+  buf_leng[len_char + 1] = '\0';
+
+  int len = atoi(buf_leng);
+  if (len == 0)
+    return 0;
+
+  int ind = 0, limit = strcspn(buf, DIVISION_MASK);
+  while ((buf + len_char + 1)[ind] != '\"' || ind < limit)
+    ind++;
+
+  if (ind != len)
+    return 0;
+
+  return 1;
 }
 
 int is_valid_req(const char *req)
@@ -39,9 +61,16 @@ int is_valid_req(const char *req)
 
   if (type == GET_KEY || type == DEL_KEY)
   {
+    return is_valid_feild(division_buf);
   }
   else if (type == SAV_KEY || type == SET_KEY)
   {
+    int key_feild = is_valid_feild(division_buf);
+    char *sec_division = strstr(normalized, DIVISION_MASK);
+    if (!sec_division)
+      return 0;
+    if (!is_valid_feild(sec_division) || !key_feild)
+      return 0;
   }
 
   free(normalized);
