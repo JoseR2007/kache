@@ -29,7 +29,7 @@ typedef enum
 type_request get_type_req(const char *);
 int is_valid_req(const char *);
 int is_valid_feild(const char *);
-kvstore *get_data(const char *, type_request);
+kvstore *get_data(const char *, type_request); // <- asume que la request se valido antes
 char *normalize_req(const char *);
 void *req_handle(const char *);
 char *get_feild_value(const char *);

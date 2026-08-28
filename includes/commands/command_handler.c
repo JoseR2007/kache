@@ -1,5 +1,6 @@
 #include "command_handler.h"
 
+/* Devuelve el tipo de solicitud de la request */
 type_request get_type_req(const char *req)
 {
   if (strncmp(req, GET_KEY, LEN_TYPE) == 0)
@@ -13,6 +14,7 @@ type_request get_type_req(const char *req)
   return unknown_type;
 }
 
+/* Verifica que el campo recibido sea valido. Devuelve 1 si lo es, 0 sino. /r/n:3:"str" */
 int is_valid_feild(const char *feild)
 {
   if (!feild || strlen(feild + 1) == 0)
@@ -39,7 +41,8 @@ int is_valid_feild(const char *feild)
   return 1;
 }
 
-int is_valid_req(const char *req)
+/* Verifica que la request recibida es valida. Devuelve 1 si lo es, 0 sino */
+int is_valid_req(const char *req) // \todo Correr tests sobre esta funcion
 {
   if (!req)
     return 0;
@@ -77,6 +80,7 @@ int is_valid_req(const char *req)
   return 1;
 }
 
+/* Devuelve los datos de la request (esta funcion asume que la request es valida). */
 kvstore *get_data(const char *req, type_request type)
 {
   kvstore *store = (kvstore *)calloc(1, sizeof(kvstore));
@@ -105,6 +109,7 @@ kvstore *get_data(const char *req, type_request type)
   return store;
 }
 
+/* Obtiene el valor que guarda un campo de la request: /r/n:3:"str" */
 char *get_feild_value(const char *feild)
 {
   if (!feild)
@@ -124,6 +129,7 @@ char *get_feild_value(const char *feild)
   return result;
 }
 
+/* Elimina los espacios de la request. */
 char *normalize_req(const char *req)
 {
   char *result = NULL;
@@ -131,7 +137,7 @@ char *normalize_req(const char *req)
 
   result = (char *)malloc((strlen(req) + 1) * sizeof(char));
   if (!result)
-    return NULL;
+    return NULL; // <- Puede devolver NULL, requiere validacion.
 
   while (req[ind] != '\0')
   {
