@@ -8,7 +8,7 @@ struct sockaddr_in *create_ip4_addr(char *ip, int port)
   address->sin_family = AF_INET;
   address->sin_port = htons(port); // convert int 16 bits
 
-  if (!ip)
+  if (!ip || strlen(ip) == 0)
     address->sin_addr.s_addr = INADDR_ANY;
   else
     inet_pton(AF_INET, ip, &address->sin_addr);
@@ -37,4 +37,10 @@ accepted_client *recive_client(int server_socket_fd)
     result->socket_error = client_fd;
 
   return result;
+}
+
+void client_thread(accepted_client *client)
+{
+  if (client->accept_successfuly != 0)
+    return;
 }

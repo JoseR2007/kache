@@ -17,5 +17,6 @@ typedef struct accepted_client
 struct sockaddr_in *create_ip4_addr(char *, int);
 int create_ip4_socket(void);
 accepted_client *recive_client(int);
+void client_thread(accepted_client *);
 
 #endif

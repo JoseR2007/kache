@@ -77,13 +77,51 @@ int is_valid_req(const char *req)
   return 1;
 }
 
-kvstore *get_data(const char *req)
+kvstore *get_data(const char *req, type_request type)
 {
   kvstore *store = (kvstore *)calloc(1, sizeof(kvstore));
   if (!store)
     return NULL;
 
   char *normalized_req = normalize_req(req);
+  if (!normalize_req)
+    return NULL;
+
+  char *f_division = strstr(normalized_req, DIVISION_MASK);
+  if (type == GET_KEY || type == DEL_KEY)
+  {
+    store->key = get_feild_value(f_division);
+    store->value = NULL;
+  }
+  else if (type == SET_KEY || type == SAV_KEY)
+  {
+    store->key = get_feild_value(f_division);
+    char *s_division = strstr(f_division + LEN_MASK, DIVISION_MASK);
+    if (!s_division)
+      return NULL;
+    store->value = get_feild_value(s_division);
+  }
+
+  return store;
+}
+
+char *get_feild_value(const char *feild)
+{
+  if (!feild)
+    return NULL;
+
+  char *result = NULL;
+  int len_char = strcspn(feild, ":");
+  char buf_leng[len_char + 1];
+  strncpy(buf_leng, strchr(feild, ':') + 1, len_char);
+  buf_leng[len_char + 1] = '\0';
+
+  int len = atoi(buf_leng);
+  result = (char *)calloc(len + 1, sizeof(char));
+  result[len] = '\0';
+  strncpy(result, strchr(feild, ':') + len_char + 1, len);
+
+  return result;
 }
 
 char *normalize_req(const char *req)
@@ -112,4 +150,14 @@ char *normalize_req(const char *req)
   }
   result[j] = '\0';
   return result;
+}
+
+void *req_handle(const char *req)
+{
+  if (req == NULL || strlen(req) == 0)
+    return NULL;
+
+  type_request type = get_type_req(req);
+  if (is_valid_req(req) == 0)
+    return NULL;
 }
