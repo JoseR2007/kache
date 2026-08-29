@@ -75,3 +75,13 @@ void delete_key(char *key, hash_table *table)
   }
   return;
 }
+
+int modif_key(hash_table *table, char *key, char *new_value)
+{
+  kvstore *kv = search(key, table);
+  if (kv == NULL)
+    return -1;
+
+  kv->value = new_value;
+  return 0;
+}

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "linked_list.h"
+#include "hash_table.h"
 
 #define GET_KEY "GET"
 #define SET_KEY "SET"

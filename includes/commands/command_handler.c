@@ -166,4 +166,23 @@ void *req_handle(const char *req)
   type_request type = get_type_req(req);
   if (is_valid_req(req) == 0)
     return NULL;
+
+  kvstore *data = get_data(req, type);
+  if (!data)
+    return NULL;
+
+  if (type == set_type)
+  {
+  }
+  else if (type == get_type)
+  {
+  }
+  else if (type == del_type)
+  {
+  }
+  else if (type == sav_type)
+  {
+  }
+
+  return;
 }
