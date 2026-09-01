@@ -14,6 +14,11 @@ int hash_fn(char *key, int size)
   return total / size;
 }
 
+int bucket_index(int hash)
+{
+  return (int)(hash % N_LOCKS);
+}
+
 int lock_index(int bucket)
 {
   return (bucket % N_LOCKS);
@@ -27,6 +32,9 @@ hash_table *creat_hash_table(void)
   pthread_mutex_t *locks = (pthread_mutex_t *)malloc(N_LOCKS * sizeof(pthread_mutex_t));
   if (!table || !locks)
     return NULL;
+
+  for (int ind = 0; ind < N_LOCKS; ind++)
+    pthread_mutex_init(&table->locks[ind], NULL);
 
   table->capacity = INIT_CAPACITY;
   table->numOfElements = 0;
@@ -60,7 +68,7 @@ void ht_destroy(hash_table *table)
   }
 
   for (int ind = 0; ind < N_LOCKS; ind++)
-    pthread_mutex_unlock(&table->locks[ind]);
+    pthread_mutex_destroy(&table->locks[ind]);
 
   free(table->locks);
   free(table);
@@ -70,6 +78,10 @@ void ht_destroy(hash_table *table)
 void hash_insert(kvstore *kv, hash_table *table)
 {
   int index = hash_fn(kv->key, table->capacity);
+  int lck = lock_index(bucket_index(index));
+
+  pthread_mutex_lock(&table->locks[lck]);
+
   Node *node = (Node *)calloc(1, sizeof(Node));
   if (!node)
     return;
@@ -83,16 +95,24 @@ void hash_insert(kvstore *kv, hash_table *table)
   }
   table->numOfElements++;
 
+  pthread_mutex_unlock(&table->locks[lck]);
+
   return;
 }
 
 kvstore *search(char *key, hash_table *table)
 {
   int index = hash_fn(key, table->capacity);
+  int lck = lock_index(bucket_index(index));
+
+  pthread_mutex_lock(&table->locks[lck]);
+
   Node *node_head_found = table->arr[index];
 
   if (node_head_found != NULL)
     return get_node_by_key(node_head_found, key)->data;
+
+  pthread_mutex_unlock(&table->locks[lck]);
 
   return NULL;
 }
@@ -100,6 +120,9 @@ kvstore *search(char *key, hash_table *table)
 void delete_key(char *key, hash_table *table)
 {
   int index = hash_fn(key, table->capacity);
+  int lck = lock_index(bucket_index(index));
+
+  pthread_mutex_lock(&table->locks[lck]);
 
   Node *current_node = NULL;
   if ((current_node = get_node_by_key(table->arr[index], key)) != NULL)
@@ -114,15 +137,25 @@ void delete_key(char *key, hash_table *table)
     free(current_node);
     table->numOfElements--;
   }
+
+  pthread_mutex_unlock(&table->locks[lck]);
   return;
 }
 
 int modif_key(hash_table *table, char *key, char *new_value)
 {
+  int bucket = bucket_index(hash_fn(key, table->capacity));
+  int lck = lock_index(bucket);
+
+  pthread_mutex_lock(&table->locks[lck]);
+
   kvstore *kv = search(key, table);
   if (kv == NULL)
     return -1;
 
   kv->value = new_value;
+
+  pthread_mutex_unlock(&table->locks[lck]);
+
   return 0;
 }

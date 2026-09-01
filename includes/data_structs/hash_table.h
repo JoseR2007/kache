@@ -25,5 +25,6 @@ void delete_key(char *, hash_table *);
 int modif_key(hash_table *, char *, char *);
 
 int lock_index(int);
+int bucket_index(int);
 
 #endif
