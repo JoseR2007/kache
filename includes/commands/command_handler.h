@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "linked_list.h"
 #include "hash_table.h"
 
@@ -18,6 +19,9 @@
 #define LEN_MASK 4
 #define LEN_TYPE 3
 
+// Logitudes de respuestas
+#define LEN_RESPONSE_404 15
+
 typedef enum
 {
   get_type,
@@ -27,12 +31,20 @@ typedef enum
   unknown_type
 } type_request;
 
+typedef struct
+{
+  type_request type;
+  char *key;
+  int status_code;
+  char *response;
+} status_req;
+
 type_request get_type_req(const char *);
 int is_valid_req(const char *);
 int is_valid_feild(const char *);
 kvstore *get_data(const char *, type_request); // <- asume que la request se valido antes
 char *normalize_req(const char *);
-void *req_handle(const char *);
+void *req_handle(const char *, hash_table *, status_req *);
 char *get_feild_value(const char *);
 
 #endif

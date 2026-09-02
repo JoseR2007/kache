@@ -117,7 +117,7 @@ kvstore *search(char *key, hash_table *table)
   return NULL;
 }
 
-void delete_key(char *key, hash_table *table)
+int delete_key(char *key, hash_table *table)
 {
   int index = hash_fn(key, table->capacity);
   int lck = lock_index(bucket_index(index));
@@ -137,9 +137,11 @@ void delete_key(char *key, hash_table *table)
     free(current_node);
     table->numOfElements--;
   }
+  else
+    return -1;
 
   pthread_mutex_unlock(&table->locks[lck]);
-  return;
+  return 1;
 }
 
 int modif_key(hash_table *table, char *key, char *new_value)

@@ -158,7 +158,7 @@ char *normalize_req(const char *req)
   return result;
 }
 
-void *req_handle(const char *req)
+void *req_handle(const char *req, hash_table *table, status_req *result)
 {
   if (req == NULL || strlen(req) == 0)
     return NULL;
@@ -171,14 +171,42 @@ void *req_handle(const char *req)
   if (!data)
     return NULL;
 
+  result->key = data->key;
+  result->type = type;
+
   if (type == set_type)
   {
+    int result_set = modif_key(table, data->key, data->value);
+    result->status_code = result_set;
   }
   else if (type == get_type)
   {
+    kvstore *data_search;
+    if ((data_search = search(data->key, table)) != NULL)
+    {
+      result->response = data_search->value;
+      result->status_code = 1;
+    }
+    else
+    {
+      result->response = (char *)calloc(LEN_RESPONSE_404, sizeof(char));
+      result->status_code = -1;
+      sprintf(result->response, "404 not fonund");
+    }
   }
   else if (type == del_type)
   {
+    int delete_status = delete_key(data->key, table);
+    if (delete_status == -1)
+    {
+      result->status_code = delete_status;
+      result->response = (char *)calloc(LEN_RESPONSE_404, sizeof(char));
+      sprintf(result->response, "404 not found");
+    }
+    else
+    {
+      result->status_code = delete_status;
+    }
   }
   else if (type == sav_type)
   {

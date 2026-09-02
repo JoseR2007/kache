@@ -21,7 +21,7 @@ hash_table *creat_hash_table(void);
 void ht_destroy(hash_table *);
 void hash_insert(kvstore *, hash_table *);
 kvstore *search(char *, hash_table *);
-void delete_key(char *, hash_table *);
+int delete_key(char *, hash_table *);
 int modif_key(hash_table *, char *, char *);
 
 int lock_index(int);
