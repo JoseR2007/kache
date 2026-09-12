@@ -75,8 +75,11 @@ void ht_destroy(hash_table *table)
   return;
 }
 
-void hash_insert(kvstore *kv, hash_table *table)
+int hash_insert(kvstore *kv, hash_table *table)
 {
+  if (!kv || !table)
+    return 0;
+
   int index = hash_fn(kv->key, table->capacity);
   int lck = lock_index(bucket_index(index));
 
@@ -84,8 +87,9 @@ void hash_insert(kvstore *kv, hash_table *table)
 
   Node *node = (Node *)calloc(1, sizeof(Node));
   if (!node)
-    return;
+    return -1;
 
+  node->data = kv;
   if (table->arr[index] == NULL)
     table->arr[index] = node;
   else // Colision
@@ -97,7 +101,7 @@ void hash_insert(kvstore *kv, hash_table *table)
 
   pthread_mutex_unlock(&table->locks[lck]);
 
-  return;
+  return 1;
 }
 
 kvstore *search(char *key, hash_table *table)
@@ -138,7 +142,7 @@ int delete_key(char *key, hash_table *table)
     table->numOfElements--;
   }
   else
-    return -1;
+    return -2;
 
   pthread_mutex_unlock(&table->locks[lck]);
   return 1;
@@ -153,11 +157,10 @@ int modif_key(hash_table *table, char *key, char *new_value)
 
   kvstore *kv = search(key, table);
   if (kv == NULL)
-    return -1;
-
+    return -2;
   kv->value = new_value;
 
   pthread_mutex_unlock(&table->locks[lck]);
 
-  return 0;
+  return 1;
 }

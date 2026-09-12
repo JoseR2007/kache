@@ -20,7 +20,9 @@
 #define LEN_TYPE 3
 
 // Logitudes de respuestas
-#define LEN_RESPONSE_404 15
+#define LEN_RESPONSE_400 12 // Bad request
+#define LEN_RESPONSE_404 15 // Not found
+#define LEN_RESPONSE_500 13 // Server errror
 
 typedef enum
 {
@@ -46,5 +48,7 @@ kvstore *get_data(const char *, type_request); // <- asume que la request se val
 char *normalize_req(const char *);
 void *req_handle(const char *, hash_table *, status_req *);
 char *get_feild_value(const char *);
+
+void get_message_status(int, type_request, status_req *);
 
 #endif

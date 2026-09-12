@@ -165,52 +165,81 @@ void *req_handle(const char *req, hash_table *table, status_req *result)
 
   type_request type = get_type_req(req);
   if (is_valid_req(req) == 0)
+  {
+    get_message_status(-10, type, result);
     return NULL;
-
+  }
   kvstore *data = get_data(req, type);
   if (!data)
     return NULL;
-
   result->key = data->key;
   result->type = type;
 
+  int status_code;
   if (type == set_type)
-  {
-    int result_set = modif_key(table, data->key, data->value);
-    result->status_code = result_set;
-  }
+    status_code = modif_key(table, data->key, data->value);
   else if (type == get_type)
   {
     kvstore *data_search;
-    if ((data_search = search(data->key, table)) != NULL)
-    {
-      result->response = data_search->value;
-      result->status_code = 1;
-    }
-    else
-    {
-      result->response = (char *)calloc(LEN_RESPONSE_404, sizeof(char));
-      result->status_code = -1;
-      sprintf(result->response, "404 not fonund");
-    }
+    data_search = search(data->key, table);
+    status_code = (!data_search) ? -1 : 1;
   }
   else if (type == del_type)
-  {
-    int delete_status = delete_key(data->key, table);
-    if (delete_status == -1)
-    {
-      result->status_code = delete_status;
-      result->response = (char *)calloc(LEN_RESPONSE_404, sizeof(char));
-      sprintf(result->response, "404 not found");
-    }
-    else
-    {
-      result->status_code = delete_status;
-    }
-  }
+    status_code = delete_key(data->key, table);
   else if (type == sav_type)
+    status_code = hash_insert(data, table);
+
+  get_message_status(status_code, type, result);
+  return NULL;
+}
+
+void get_message_status(int status, type_request type, status_req *req)
+{
+  char *message = NULL;
+  int error_code;
+
+  if (status > 0)
   {
+    req->response = NULL;
+    req->status_code = 200;
+    return;
   }
 
+  if (status == -1)
+  {
+    message = (char *)calloc(LEN_RESPONSE_500, sizeof(char));
+    if (!message)
+      return;
+    sprintf(message, "Server error");
+    req->status_code = 500;
+    req->response = message;
+    return;
+  }
+
+  if (status == -10)
+  {
+    message = (char *)calloc(LEN_RESPONSE_400, sizeof(char));
+    if (!message)
+      return;
+    sprintf(message, "Bad request");
+    req->status_code = 400;
+    req->response = message;
+    return;
+  }
+
+  if (type == GET_KEY || type == SET_KEY || type == DEL_KEY)
+  {
+    if (status == -2)
+    {
+      message = (char *)calloc(LEN_RESPONSE_404, sizeof(char));
+      if (!message)
+        return;
+      error_code = 404;
+      sprintf(message, "Not found");
+    }
+  }
+
+  req->status_code = error_code;
+  req->response = message;
   return;
 }
