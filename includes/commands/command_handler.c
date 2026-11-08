@@ -88,7 +88,7 @@ kvstore *get_data(const char *req, type_request type)
     return NULL;
 
   char *normalized_req = normalize_req(req);
-  if (!normalize_req)
+  if (!normalized_req)
     return NULL;
 
   char *f_division = strstr(normalized_req, DIVISION_MASK);
@@ -106,6 +106,7 @@ kvstore *get_data(const char *req, type_request type)
     store->value = get_feild_value(s_division);
   }
 
+  free(normalized_req);
   return store;
 }
 
@@ -113,7 +114,7 @@ kvstore *get_data(const char *req, type_request type)
 char *get_feild_value(const char *feild)
 {
   if (!feild)
-    return NULL;
+    return NULL; // <- Puede devolver NULL, requiere validacion
 
   char *result = NULL;
   int len_char = strcspn(feild, ":");
@@ -158,10 +159,14 @@ char *normalize_req(const char *req)
   return result;
 }
 
+/*
+Llama a la funcion correspondiete para la peticion
+- Asume que *table no es NULL
+*/
 void *req_handle(const char *req, hash_table *table, status_req *result)
 {
   if (req == NULL || strlen(req) == 0)
-    return NULL;
+    return NULL; // <- Devuelve NULL por su uso en threads
 
   type_request type = get_type_req(req);
   if (is_valid_req(req) == 0)
@@ -172,7 +177,7 @@ void *req_handle(const char *req, hash_table *table, status_req *result)
   kvstore *data = get_data(req, type);
   if (!data)
     return NULL;
-  result->key = data->key;
+  result->key = data->key; // result siempre contiene los valores de data aunque falle
   result->type = type;
 
   int status_code;
@@ -193,9 +198,14 @@ void *req_handle(const char *req, hash_table *table, status_req *result)
   return NULL;
 }
 
+/*
+Genera y guarda en la request el codigo de estatus y mensaje segun el resultado de la request.
+- Asume que *req no es NULL
+- Asume que status es un valor valido
+*/
 void get_message_status(int status, type_request type, status_req *req)
 {
-  char *message = NULL;
+  char *message = NULL; // <- El tamaño del puntero depende del estado
   int error_code;
 
   if (status > 0)
@@ -205,7 +215,7 @@ void get_message_status(int status, type_request type, status_req *req)
     return;
   }
 
-  if (status == -1)
+  if (status == -1) // Error interno del servido
   {
     message = (char *)calloc(LEN_RESPONSE_500, sizeof(char));
     if (!message)
@@ -216,7 +226,7 @@ void get_message_status(int status, type_request type, status_req *req)
     return;
   }
 
-  if (status == -10)
+  if (status == -10) // Peticion mal realizada
   {
     message = (char *)calloc(LEN_RESPONSE_400, sizeof(char));
     if (!message)
