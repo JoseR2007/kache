@@ -14,43 +14,50 @@ type_request get_type_req(const char *req)
   return unknown_type;
 }
 
-/* Verifica que el campo recibido sea valido. Devuelve 1 si lo es, 0 sino. /r/n:3:"str" */
+/*
+Verifica que el campo recibido sea valido. Devuelve 1 si lo es, 0 sino. /r/n:3:"str"
+- Si es valido devuelve la longitud del campo, si no -1, si hubo un error interno devuelve -2
+*/
 int is_valid_feild(const char *feild)
 {
   if (!feild || strlen(feild + 1) == 0)
-    return 0;
+    return -1;
   if (!strstr(feild, DIVISION_MASK))
-    return 0;
+    return -1;
 
   char *general_buffer;
   if ((general_buffer = strchr(feild, ':') + 1) == NULL)
-    return 0;
+    return -1;
 
+  general_buffer++;
   int ind = 0;
   char *len_buf = NULL;
   while (isdigit(general_buffer[ind]))
   {
     len_buf = (char *)realloc(len_buf, (ind + 1) * sizeof(char));
     if (!len_buf)
-      return -1;
+      return -2;
     len_buf[ind] = general_buffer[ind];
     ind++;
   }
   int value_len = atoi(len_buf);
   free(len_buf);
 
-  char *value_buf;
-  if ((value_buf = strchr(general_buffer, ':') + 2) == NULL)
-    return 0;
+  if (value_len <= 0 || value_len > MAX_LEN_FEILD)
+    return -1;
 
+  char *value_buf;
+  if ((value_buf = strchr(general_buffer, ':')) == NULL)
+    return -1;
+
+  value_buf += 2;
   ind = 0;
   while (value_buf[ind] != '"')
     ind++;
 
   if (ind != value_len)
-    return 0;
-
-  return 1;
+    return -1;
+  return value_len;
 }
 
 /* Verifica que la request recibida es valida. Devuelve 1 si lo es, 0 sino */
@@ -93,52 +100,26 @@ int is_valid_req(const char *req) // \todo Correr tests sobre esta funcion
 }
 
 /* Devuelve los datos de la request (esta funcion asume que la request es valida). */
-kvstore *get_data(const char *req, type_request type)
+kvstore *get_data(const char *req, type_request type) // \todo: reconstruir esta funcion
 {
-  kvstore *store = (kvstore *)calloc(1, sizeof(kvstore));
-  if (!store)
-    return NULL;
-
-  char *normalized_req = normalize_req(req);
-  if (!normalized_req)
-    return NULL;
-
-  char *f_division = strstr(normalized_req, DIVISION_MASK);
-  if (type == GET_KEY || type == DEL_KEY)
-  {
-    store->key = get_feild_value(f_division);
-    store->value = NULL;
-  }
-  else if (type == SET_KEY || type == SAV_KEY)
-  {
-    store->key = get_feild_value(f_division);
-    char *s_division = strstr(f_division + LEN_MASK, DIVISION_MASK);
-    if (!s_division)
-      return NULL;
-    store->value = get_feild_value(s_division);
-  }
-
-  free(normalized_req);
-  return store;
 }
 
 /* Obtiene el valor que guarda un campo de la request: /r/n:3:"str" */
-char *get_feild_value(const char *feild)
+char *get_feild_value(const char *feild, int length)
 {
   if (!feild)
     return NULL; // <- Puede devolver NULL, requiere validacion
 
-  char *result = NULL;
-  int len_char = strcspn(feild, ":");
-  char buf_leng[len_char + 1];
-  strncpy(buf_leng, strchr(feild, ':') + 1, len_char);
-  buf_leng[len_char + 1] = '\0';
+  char *general_buf;
+  if (!(general_buf = strstr(feild, "\"") + 1))
+    return NULL;
 
-  int len = atoi(buf_leng);
-  result = (char *)calloc(len + 1, sizeof(char));
-  result[len] = '\0';
-  strncpy(result, strchr(feild, ':') + len_char + 1, len);
+  char *result = calloc(length + 1, sizeof(char));
+  if (!result)
+    return NULL;
 
+  memcpy(result, general_buf, (size_t)length);
+  result[length] = '\0';
   return result;
 }
 

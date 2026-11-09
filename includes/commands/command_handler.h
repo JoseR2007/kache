@@ -18,6 +18,7 @@
 
 #define LEN_MASK 4
 #define LEN_TYPE 3
+#define MAX_LEN_FEILD 65536
 
 // Logitudes de respuestas
 #define LEN_RESPONSE_400 12 // Bad request
@@ -41,13 +42,20 @@ typedef struct
   char *response;
 } status_req;
 
+typedef struct
+{
+  type_request type;
+  int is_valid_req;
+  int *lenght_feilds;
+} valid_resume;
+
 type_request get_type_req(const char *);
 int is_valid_req(const char *);
 int is_valid_feild(const char *);
 kvstore *get_data(const char *, type_request); // <- asume que la request se valido antes
 char *normalize_req(const char *);
 void *req_handle(const char *, hash_table *, status_req *);
-char *get_feild_value(const char *);
+char *get_feild_value(const char *, int);
 
 void get_message_status(int, type_request, status_req *);
 
