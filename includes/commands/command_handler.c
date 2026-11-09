@@ -19,23 +19,35 @@ int is_valid_feild(const char *feild)
 {
   if (!feild || strlen(feild + 1) == 0)
     return 0;
-
-  char *buf = strchr(feild, ':');
-
-  int len_char = strcspn(feild, ":");
-  char buf_leng[len_char + 1];
-  strncpy(buf_leng, buf + 1, len_char);
-  buf_leng[len_char + 1] = '\0';
-
-  int len = atoi(buf_leng);
-  if (len == 0)
+  if (!strstr(feild, DIVISION_MASK))
     return 0;
 
-  int ind = 0, limit = strcspn(buf, DIVISION_MASK);
-  while ((buf + len_char + 1)[ind] != '\"' || ind < limit)
+  char *general_buffer;
+  if ((general_buffer = strchr(feild, ':') + 1) == NULL)
+    return 0;
+
+  int ind = 0;
+  char *len_buf = NULL;
+  while (isdigit(general_buffer[ind]))
+  {
+    len_buf = (char *)realloc(len_buf, (ind + 1) * sizeof(char));
+    if (!len_buf)
+      return -1;
+    len_buf[ind] = general_buffer[ind];
+    ind++;
+  }
+  int value_len = atoi(len_buf);
+  free(len_buf);
+
+  char *value_buf;
+  if ((value_buf = strchr(general_buffer, ':') + 2) == NULL)
+    return 0;
+
+  ind = 0;
+  while (value_buf[ind] != '"')
     ind++;
 
-  if (ind != len)
+  if (ind != value_len)
     return 0;
 
   return 1;
